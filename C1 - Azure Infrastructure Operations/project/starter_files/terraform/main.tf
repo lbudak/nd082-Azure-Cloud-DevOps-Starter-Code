@@ -22,7 +22,6 @@ resource "azurerm_subnet" "internal" {
     resource_group_name  = azurerm_resource_group.main.name
     virtual_network_name = azurerm_virtual_network.main.name
     address_prefixes     = ["10.0.5.0/24"]
-    tags = var.tagging
 }
 
 resource "azurerm_public_ip" "pip" {
@@ -36,7 +35,7 @@ resource "azurerm_public_ip" "pip" {
 resource "azurerm_network_interface" "main" {
     count = var.num_of_instances
 
-    name = "${var.prefix}-nic${count.index}"
+    name = "${var.prefix}-nic${count.index+1}"
     resource_group_name = azurerm_resource_group.main.name
     location = azurerm_resource_group.main.location
 
@@ -54,8 +53,7 @@ resource "azurerm_network_security_group" "main" {
     location = azurerm_resource_group.main.location
     resource_group_name = azurerm_resource_group.main.name
 
-    security_rule[
-      {
+    security_rule {
         name                       = "InterVMAccess"
         priority                   = 150
         direction                  = "Outbound"
@@ -65,8 +63,9 @@ resource "azurerm_network_security_group" "main" {
         destination_port_range     = "*"
         source_address_prefix      = azurerm_subnet.internal.address_prefix
         destination_address_prefix = azurerm_subnet.internal.address_prefix
-      },
-      {
+    }
+
+    security_rule {
         name                       = "DenyInternetAccess"
         priority                   = 100
         direction                  = "Inbound" 
@@ -76,8 +75,8 @@ resource "azurerm_network_security_group" "main" {
         destination_port_range     = "*"
         source_address_prefix      = "Internet"
         destination_address_prefix = azurerm_subnet.internal.address_prefix
-      }
-    ]
+    }
+    
 
   tags = var.tagging
 }
@@ -96,11 +95,8 @@ resource "azurerm_lb" "main" {
 }
 
 resource "azurerm_lb_backend_address_pool" "main" {
-    resource_group_name = azurerm_resource_group.main.name
     loadbalancer_id = azurerm_lb.main.id
     name = "backendAddressPool"
-
-    tags = var.tagging
 }
 
 resource "azurerm_network_interface_backend_address_pool_association" "main" {
@@ -109,8 +105,6 @@ resource "azurerm_network_interface_backend_address_pool_association" "main" {
     network_interface_id = element(azurerm_network_interface.main[*].id, count.index)
     ip_configuration_name = "internal"
     backend_address_pool_id = azurerm_lb_backend_address_pool.main.id
-
-    tags = var.tagging    
 }
 
 resource "azurerm_availability_set" "main" {
@@ -132,7 +126,7 @@ data "azurerm_image" "packerImage" {
 resource "azurerm_linux_virtual_machine" "main" {
     count = var.num_of_instances 
     
-    name = "${var.prefix}-${count.index}-vm"
+    name = "${var.prefix}-vm-${count.index+1}"
     resource_group_name = azurerm_resource_group.main.name
     location = azurerm_resource_group.main.location
     size = "Standard_D2s_v3"
@@ -148,9 +142,22 @@ resource "azurerm_linux_virtual_machine" "main" {
     source_image_id = data.azurerm_image.packerImage.id
 
     os_disk {
-      storage_account_type = "Standard_LRS"
+      storage_account_type = var.storage_account
       caching              = "ReadWrite"
     }
+
+    tags = var.tagging
+}
+
+resource "azurerm_managed_disk" "main" {
+    count = var.num_of_instances
+    
+    name = "${var.prefix}-managed-disk-${count.index+1}"
+    location = azurerm_resource_group.main.location
+    resource_group_name = azurerm_resource_group.main.name
+    storage_account_type = var.storage_account
+    create_option = "Empty"
+    disk_size_gb = "1"
 
     tags = var.tagging
 }

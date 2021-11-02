@@ -50,3 +50,9 @@ variable "tagging" {
   }
   description = "Tags to be used throughout the project"
 }
+
+variable "storage_account" {
+  type        = string
+  default     = "Standard_LRS"
+  description = "The type of storage to use for the disk"
+}
