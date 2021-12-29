@@ -53,7 +53,7 @@ stages:
         make install
         make lint
       workingDirectory: $(projectRoot)/C2-AgileDevelopmentwithAzure/azure_pipelines_exercise/starter_files/
-      displayName: 'Run lint tests'
+      displayName: 'Run lint tests2'
 
     - task: ArchiveFiles@2
       displayName: 'Archive files'
