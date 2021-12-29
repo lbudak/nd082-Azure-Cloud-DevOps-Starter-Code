@@ -44,7 +44,7 @@ stages:
         python -m pip install --upgrade pip
         pip install setup
         pip install -r requirements.txt
-      workingDirectory: $(projectRoot)
+      workingDirectory: $(projectRoot)/C2-AgileDevelopmentwithAzure/azure_pipelines_exercise/starter_files/
       displayName: "Install requirements"
 
     - task: ArchiveFiles@2
