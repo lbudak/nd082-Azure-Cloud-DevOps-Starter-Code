@@ -46,6 +46,14 @@ stages:
         pip install -r requirements.txt
       workingDirectory: $(projectRoot)/C2-AgileDevelopmentwithAzure/azure_pipelines_exercise/starter_files/
       displayName: "Install requirements"
+      
+    - script: |
+        python -m venv antenv
+        source antenv/bin/activate
+        make install
+        make lint
+      workingDirectory: $(projectRoot)/C2-AgileDevelopmentwithAzure/azure_pipelines_exercise/starter_files/
+      displayName: 'Run lint tests'
 
     - task: ArchiveFiles@2
       displayName: 'Archive files'
